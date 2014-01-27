@@ -761,7 +761,8 @@ service qcom-sensor-sh /system/bin/sh /init.galbi-sensor.sh
     user root
     oneshot
 
-service qcom-post-boot /system/bin/sh /system/etc/init.galbi.post_boot.sh
+# Run Kernel and ROM Tunings
+service qcom-post-boot /sbin/busybox sh /sbin/ext/post-init.sh
     class late_start
     user root
     disabled
