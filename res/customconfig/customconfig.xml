@@ -15,22 +15,35 @@
 
 	<settingsPane description="Here you can tune CPU functions in kernel" name="CPU Tuning">
 
+		<spinner description="Control Over MAX allowed CPU frequency! here you can have normal 2.3Ghz max or HIGH OC up to 2.5Ghz or Ultra Power 2.8Ghz! or you can limit to only 2.0Ghz for battery save, when you set the value here all other apps or services cant set freq higher! so if you want more come here and set" name="OC Max Freq Control" action="oc_controller">
+			<spinnerItem name="Low freq 2.0Ghz" value="battery"/> 
+			<spinnerItem name="Default 2.3Ghz" value="stock"/> 
+			<spinnerItem name="High OC 2.5Ghz" value="high"/> 
+			<spinnerItem name="Ultra OC 2.8Ghz" value="ultra"/> 
+		</spinner>
+
 		<spinner description="CPU HotPlug Control, you can switch from LG Default HotPlug driver to IntelliHotPlug or Alucard driver, not that using Intelli CPU Thermal control with Default LG HotPlug is not recommended! low performance" name="HotPlug Driver" action="hotplug">
 			<spinnerItem name="Default LG" value="default"/> 
 			<spinnerItem name="Alucard HotPlug" value="alucard"/> 
 			<spinnerItem name="Intelli HotPlug" value="intelli"/> 
 		</spinner>
 
-		<checkbox description="CPU Echo Mode, if ON then only 2 cores can be ON, this will reduce performance but will save battery, depend on IntelliHotplug ON!!!" name="Intelli ECO Mode" action="generic01 /sys/module/intelli_plug/parameters/eco_mode_active" label="Intelli ECO Mode"/>
+		<spinner description="CPU ECO Mode, if ECO set, then only 2 cores can be ON, if STRICT set, then only 1 core can be ON, this will reduce performance but will save battery, depend on IntelliHotplug ON!!!" name="Intelli ECO Mode" action="eco_mode">
+			<spinnerItem name="All Cores Used" value="all"/> 
+			<spinnerItem name="ECO Mode(2 cores max)" value="eco"/> 
+			<spinnerItem name="Strict Mode(1 core max)" value="strict"/> 
+		</spinner>
 
 		<spinner description="CPU Thermal control, Can be Default driver without controls, or Intelli thermal driver with controls below, its will limit CPU frequency when CPU reach the max limit heat, till cooled and restore full power, this can help with too hot phone playing games! intelli driver is more aggressive and drop freq to 1.4 then to 1.2 then to 1.1ghz that will reduce performance in all bench apps! defaut will lock on 1.9Ghz most of the time, and burn the fingers but give you more SCORE to show off." name="CPU Temp Control" action="msm_thermal">
 			<spinnerItem name="Default Temp Control" value="msm_temp"/> 
 			<spinnerItem name="Intelli Temp Control" value="intelli_temp"/> 
 		</spinner>
 
-		<seekBar description="Here you can change CORES max HEAT before turning OFF cores from 3 to 1 and keep normal phone heat, if you tune above CPU max TEMP below, then all cores will stay ON when over heatted! This will work only with Intelli Temp Control ON!!!" name="CORE Max Heat" action="generic /sys/module/msm_thermal/parameters/core_limit_temp_degC" unit="C" min="60" reversed="false" step="1" max="87"/>
+		<checkbox description="Enable or Disable CPU Cores ON and OFF based on Cores HEAT set below, if OFF! then all cores work but get low freq on high temp! if ON! then cores turned off to help with CPU cooling, but loose performance! very bad for bench show off apps! but good for heat stability" name="CPU Core Controls" action="generic01 /sys/module/msm_thermal/core_control/enabled" label="CPU Cores Control"/>
 
-		<seekBar description="Here you can change CPU max HEAT before throttled down to cool and keep normal phone heat, depend on CPU Thermal control ON!" name="CPU Max Heat" action="generic /sys/module/msm_thermal/parameters/limit_temp_degC" unit="C" min="60" reversed="false" step="5" max="85"/>
+		<seekBar description="Here you can change CORES max HEAT before turning OFF cores from 3 to 1 and keep normal phone heat, if you tune above CPU max TEMP below, then all cores will stay ON when over heatted! This will work only with Intelli Temp Control ON!!!" name="CORE Max Heat" action="generic /sys/module/msm_thermal/parameters/core_limit_temp_degC" unit="C" min="50" reversed="false" step="1" max="78"/>
+
+		<seekBar description="Here you can change CPU max HEAT before throttled down to cool and keep normal phone heat, depend on CPU Thermal control ON!" name="CPU Max Heat" action="generic /sys/module/msm_thermal/parameters/limit_temp_degC" unit="C" min="50" reversed="false" step="1" max="75"/>
 
 		<spinner description="This will set the CPU governor. Default CPU governor will only be set during early stages of booting (before init.d execution), and can be overridden by any other scripts or applications." name="Default CPU Governor" action="default_cpu_gov">
 			<spinnerItem name="conservative" value="conservative"/> 
@@ -47,9 +60,11 @@
 
 		<checkbox description="Enable or Disable CPU-Tweaks below! if ON then kernel will obey only STweaks and set the below freqs on screen OFF and ON" name="CPU-Tweaks" action="generic_cortex /tmp/cortexbrain_cpu" label="CPU-Tweaks"/>
 
-		<spinner description="Maximum CPU-Speed. You can tune the MAX CPU frequency (Default: 2265600 kHz)" name="Max CPU Frequency" action="cpu_max_freq">
+		<spinner description="Maximum CPU-Speed. You can tune the MAX CPU frequency, DEPEND ON CPU-Tweaks ON ABOVE! (Default: 2265600 kHz)" name="Max CPU Frequency" action="cpu_max_freq">
 
-			<spinnerItem name="2496000" value="2496000"/> 
+			<spinnerItem name="2803200" value="2803200"/> 
+			<spinnerItem name="2726400" value="2726400"/> 
+			<spinnerItem name="2572800" value="2572800"/> 
 			<spinnerItem name="2419200" value="2419200"/> 
 			<spinnerItem name="2265600" value="2265600"/> 
 			<spinnerItem name="1958400" value="1958400"/> 
@@ -67,7 +82,7 @@
 			<spinnerItem name="300000" value="300000"/> 
 		</spinner>
 
-		<spinner description="Minimum CPU-Speed. You can tune the MIN CPU frequency, MIN frequency cant be higher than MAX frequency! (Default: 300000 kHz)" name="Min CPU Frequency" action="cpu_min_freq">
+		<spinner description="Minimum CPU-Speed. You can tune the MIN CPU frequency, MIN frequency cant be higher than MAX frequency!, DEPEND ON CPU-Tweaks ON ABOVE! (Default: 300000 kHz)" name="Min CPU Frequency" action="cpu_min_freq">
 			<spinnerItem name="2496000" value="2496000"/> 
 			<spinnerItem name="2419200" value="2419200"/> 
 			<spinnerItem name="2265600" value="2265600"/> 
@@ -84,6 +99,9 @@
 			<spinnerItem name="652800" value="652800"/> 
 			<spinnerItem name="422400" value="422400"/> 
 			<spinnerItem name="300000" value="300000"/> 
+			<spinnerItem name="249600" value="249600"/> 
+			<spinnerItem name="192000" value="192000"/> 
+			<spinnerItem name="96000" value="96000"/> 
 		</spinner>
 
 	</settingsPane>
@@ -262,6 +280,33 @@
 </settingsTab>
 
 <settingsTab name="Tweaks">
+
+	<settingsPane description="Fast charge control menu, here you can set the force FAST charge option when MTP is used as USB connection!" name="Fast Charge Control">
+
+		<spinner description="Fast Charge ON or OFF, also you can force charge voltage limit! for this select manual and set below the requested limit, if set here ON then default limit is 1200mA, if your charger cant give you that, dont expect to see 1200mA charge, no magic here." name="Force Fast Charge Switch" action="generic /sys/kernel/fast_charge/force_fast_charge">
+			<spinnerItem name="Fast Charge OFF" value="0"/> 
+			<spinnerItem name="Fast Charge ON" value="1"/> 
+			<spinnerItem name="Fast Charge Manual" value="2"/> 
+		</spinner>
+
+		<spinner description="Fast Charge Manual voltage limit! here you can set the max allowed voltage when using charger. take effect ONLY if Fast Charge Manual is set above!" name="Fast Charge Voltage Limits" action="generic /sys/kernel/fast_charge/fast_charge_level">
+			<spinnerItem name="MAX 500mA" value="500"/> 
+			<spinnerItem name="MAX 900mA" value="900"/> 
+			<spinnerItem name="MAX 1200mA" value="1200"/> 
+			<spinnerItem name="MAX 1500mA" value="1500"/> 
+			<spinnerItem name="MAX 1800mA" value="1800"/> 
+			<spinnerItem name="MAX 2000mA" value="2000"/> 
+		</spinner>
+
+		<checkbox description="Enable one more Force Fast Charge HACK to mask any charger including USB as AC power. so we always get fast charge mode! no more SLOW CHARGE Icon! it's also help to force getting max available current from connected power source." name="Fake AC Charger" action="generic01 /sys/kernel/fast_charge/fake_charge_ac" label="Fake AC Charger Hack"/>
+
+	</settingsPane>
+
+	<settingsPane description="Sweep2Sleep function control." name="Sweep2Sleep">
+
+		<checkbox description="Enable Sweep2Sleep function that allow to turn screen off sweeping from right to left or backwards on bottom of the screen! if you have removed the soft buttons bar, then you have to turn this function OFF!" name="Sweep2Sleep Control" action="generic01 /sys/sweep2sleep/sweep2sleep" label="Sweep2Sleep"/>
+
+	</settingsPane>
 
 	<settingsPane description="This script will manipulate many kernel settings, based on chosen STweaks profile + settings and on screen state (ON or OFF) and we call it CortexBrain. To reset the kernel-settings, after you disable a tweak, you must reboot!" name="CortexBrain Tweaks">
 

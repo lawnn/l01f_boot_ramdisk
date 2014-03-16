@@ -7,9 +7,6 @@ BB=/sbin/busybox
 # protect init from oom
 echo "-1000" > /proc/1/oom_score_adj;
 
-# set high priority to temp controller
-$BB renice -n -17 -p $(pgrep -f "/system/bin/thermal-engine");
-
 OPEN_RW()
 {
         $BB mount -o remount,rw /;
@@ -56,6 +53,13 @@ fi;
 sleep 5;
 OPEN_RW;
 
+# some nice thing for dev
+if [ ! -e /cpufreq ]; then
+	$BB ln -s /sys/devices/system/cpu/cpu0/cpufreq /cpufreq;
+	$BB ln -s /sys/devices/system/cpu/cpufreq/ /cpugov;
+	$BB ln -s /sys/module/msm_thermal/parameters/ /cputemp;
+fi;
+
 # cleaning
 $BB rm -rf /cache/lost+found/* 2> /dev/null;
 $BB rm -rf /data/lost+found/* 2> /dev/null;
@@ -79,13 +83,23 @@ CRITICAL_PERM_FIX()
 }
 CRITICAL_PERM_FIX;
 
+ONDEMAND_TUNING()
+{
+	echo "20" > /cpugov/ondemand/down_differential;
+	echo "3" > /cpugov/ondemand/down_differential_multi_core;
+	echo "1" > /cpugov/ondemand/enable_turbo_mode;
+	echo "95" > /cpugov/ondemand/micro_freq_up_threshold;
+	echo "1" > /cpugov/ondemand/sampling_down_factor;
+	echo "60000" > /cpugov/ondemand/sampling_rate;
+	echo "80" > /cpugov/ondemand/up_threshold;
+	echo "80" > /cpugov/ondemand/up_threshold_any_cpu_load;
+	echo "90" > /cpugov/ondemand/up_threshold_multi_core;
+}
+
 # oom and mem perm fix
 $BB chmod 666 /sys/module/lowmemorykiller/parameters/cost;
 $BB chmod 666 /sys/module/lowmemorykiller/parameters/adj;
 $BB chmod 666 /sys/module/lowmemorykiller/parameters/minfree
-
-# enable force fast charge on USB to charge faster
-echo "1" > /sys/kernel/fast_charge/force_fast_charge;
 
 # make sure we own the device nodes
 $BB chown system /sys/devices/system/cpu/cpufreq/ondemand/*
@@ -93,9 +107,9 @@ $BB chown system /sys/devices/system/cpu/cpu0/cpufreq/*
 $BB chown system /sys/devices/system/cpu/cpu1/online
 $BB chown system /sys/devices/system/cpu/cpu2/online
 $BB chown system /sys/devices/system/cpu/cpu3/online
-$BB chmod 666 /sys/devices/system/cpu/cpu0/cpufreq/scalling_governor
-$BB chmod 666 /sys/devices/system/cpu/cpu0/cpufreq/scalling_max_freq
-$BB chmod 666 /sys/devices/system/cpu/cpu0/cpufreq/scalling_min_freq
+$BB chmod 666 /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+$BB chmod 666 /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+$BB chmod 666 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 $BB chmod 444 /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
 $BB chmod 444 /sys/devices/system/cpu/cpu0/cpufreq/stats/*
 $BB chmod 666 /sys/devices/system/cpu/cpu1/online
@@ -104,19 +118,11 @@ $BB chmod 666 /sys/devices/system/cpu/cpu3/online
 $BB chmod 666 /sys/module/intelli_plug/parameters/*
 $BB chmod 666 /sys/module/msm_thermal/parameters/*
 $BB chmod 666 /sys/module/msm_thermal/core_control/enabled
-$BB chmod 666 /sys/kernel/intelli_plug/*
 $BB chmod 666 /sys/class/kgsl/kgsl-3d0/max_gpuclk
 $BB chmod 666 /sys/devices/fdb00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/pwrscale/trustzone/governor
 
 $BB chown -R root:root /data/property;
 $BB chmod -R 0700 /data/property
-
-# some nice thing for dev
-if [ ! -e /cpufreq ]; then
-	$BB ln -s /sys/devices/system/cpu/cpu0/cpufreq /cpufreq;
-	$BB ln -s /sys/devices/system/cpu/cpufreq/ /cpugov;
-	$BB ln -s /sys/module/msm_thermal/parameters/ /cputemp;
-fi;
 
 #for no_debug in $(find /sys/ -name *debug*); do
 #       echo "0" > "$no_debug";
@@ -149,7 +155,7 @@ echo 20 > /proc/sys/vm/dirty_background_ratio
 echo 40 > /proc/sys/vm/dirty_ratio
 
 # set ondemand GPU governor as default
-echo simple > /sys/devices/fdb00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/pwrscale/trustzone/governor
+echo "ondemand" > /sys/devices/fdb00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/pwrscale/trustzone/governor
 
 # set default readahead
 echo 1024 > /sys/block/mmcblk0/bdi/read_ahead_kb
@@ -188,7 +194,7 @@ fi;
 
 # reset profiles auto trigger to be used by kernel ADMIN, in case of need, if new value added in default profiles
 # just set numer $RESET_MAGIC + 1 and profiles will be reset one time on next boot with new kernel.
-RESET_MAGIC=8;
+RESET_MAGIC=12;
 if [ ! -e /data/.dori/reset_profiles ]; then
 	echo "0" > /data/.dori/reset_profiles;
 fi;
@@ -215,6 +221,9 @@ read_config;
 	# Apps and ROOT Install
 	$BB sh /sbin/ext/install.sh;
 )&
+
+# enable force fast charge on USB to charge faster
+echo "$force_fast_charge" > /sys/kernel/fast_charge/force_fast_charge;
 
 # busybox addons
 if [ -e /system/xbin/busybox ] && [ ! -e /sbin/ifconfig ]; then
@@ -249,6 +258,14 @@ if [ "$logger" == "off" ]; then
 	echo "0" > /sys/module/alarm_dev/parameters/debug_mask;
 	echo "0" > /sys/module/binder/parameters/debug_mask;
 	echo "0" > /sys/module/xt_qtaguid/parameters/debug_mask;
+	echo "0" > /sys/kernel/debug/clk/debug_suspend;
+	echo "0" > /sys/kernel/debug/msm_vidc/debug_level;
+	echo "0" > /sys/module/ipc_router/parameters/debug_mask;
+	echo "0" > /sys/module/msm_serial_hs/parameters/debug_mask;
+	echo "0" > /sys/module/msm_show_resume_irq/parameters/debug_mask;
+	echo "0" > /sys/module/mpm_of/parameters/debug_mask;
+	echo "0" > /sys/module/pm_8x60/parameters/debug_mask;
+	echo "0" > /sys/module/smp2p/parameters/debug_mask;
 fi;
 
 OPEN_RW;
@@ -260,6 +277,7 @@ $BB mount -t tmpfs -o mode=0777,gid=1000 tmpfs /mnt/ntfs
 (
 	# set ondemand as default gov
 	echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor;
+	ONDEMAND_TUNING;
 
 	if [ "$stweaks_boot_control" == "yes" ]; then
 		# stop uci.sh from running all the PUSH Buttons in stweaks on boot
@@ -274,8 +292,6 @@ $BB mount -t tmpfs -o mode=0777,gid=1000 tmpfs /mnt/ntfs
 		$BB chmod 777 /data/.dori/booting;
 		$BB pkill -f "com.gokhanmoral.stweaks.app";
 		$BB nohup $BB sh /res/uci.sh restore;
-		UCI_PID=$(pgrep -f "/res/uci.sh");
-		echo "-800" > /proc/"$UCI_PID"/oom_score_adj;
 
 		OPEN_RW;
 		# restore all the PUSH Button Actions back to there location
@@ -291,6 +307,9 @@ $BB mount -t tmpfs -o mode=0777,gid=1000 tmpfs /mnt/ntfs
 
 		# Load Custom Modules
 		MODULES_LOAD;
+		if [ -e /cpugov/ondemand ]; then
+			ONDEMAND_TUNING;
+		fi;
 	fi;
 
 	# Start any init.d scripts that may be present in the rom or added by the user
