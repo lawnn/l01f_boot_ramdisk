@@ -225,7 +225,7 @@
 #line 1 "device/lge/g2-common/sepolicy/file_contexts"
 # GPU device
 /dev/kgsl-3d0       u:object_r:gpu_device:s0
-#line 1 "vendor/cm/sepolicy/file_contexts"
+#line 1 "vendor/vanir/sepolicy/file_contexts"
 /cache/dalvik-cache(/.*)? u:object_r:dalvikcache_data_file:s0
 
 #############################
