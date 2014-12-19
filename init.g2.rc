@@ -1,4 +1,5 @@
 import init.g2.usb.rc
+import init.g2_product.rc
 
 on early-init
     mount debugfs debugfs /sys/kernel/debug
@@ -42,6 +43,23 @@ on init
 
 on fs
     mount_all ./fstab.g2
+
+    mount tmpfs tmpfs /system/lib/modules
+    symlink /lib/modules/ansi_cprng.ko /system/lib/modules/ansi_cprng.ko
+    symlink /lib/modules/coresight-event.ko /system/lib/modules/coresight-event.ko
+    symlink /lib/modules/dma_test.ko /system/lib/modules/dma_test.ko
+    symlink /lib/modules/exfat.ko /system/lib/modules/exfat.ko
+    symlink /lib/modules/gspca_main.ko /system/lib/modules/gspca_main.ko
+    symlink /lib/modules/mcdrvmodule.ko /system/lib/modules/mcdrvmodule.ko
+    symlink /lib/modules/mckernelapi.ko /system/lib/modules/mckernelapi.ko
+    symlink /lib/modules/mmc_test.ko /system/lib/modules/mmc_test.ko
+    symlink /lib/modules/msm-buspm-dev.ko /system/lib/modules/msm-buspm-dev.ko
+    symlink /lib/modules/qcrypto.ko /system/lib/modules/qcrypto.ko
+    symlink /lib/modules/rdbg.ko /system/lib/modules/rdbg.ko
+    symlink /lib/modules/reset_modem.ko /system/lib/modules/reset_modem.ko
+    symlink /lib/modules/scsi_wait_scan.ko /system/lib/modules/scsi_wait_scan.ko
+    symlink /lib/modules/spidev.ko /system/lib/modules/spidev.ko
+
     write /sys/kernel/boot_adsp/boot 1
     setprop ro.crypto.fuse_sdcard true
 
@@ -214,6 +232,9 @@ on post-fs-data
     # communicate with mpdecision and thermald
     mkdir /dev/socket/mpdecision 0770 system system
     chmod 2770 /dev/socket/mpdecision
+    
+    # time_daemon storage
+    mkdir /data/time/ 0700 system system
 
     # time_daemon storage
     mkdir /data/time/ 0700 system system
