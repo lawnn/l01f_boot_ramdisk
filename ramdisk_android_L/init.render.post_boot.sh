@@ -109,3 +109,4 @@ $BB echo "Boot initiated on $(date)" > /tmp/bootcheck;
 
 ln -s /res/synapse/uci /sbin/uci
 /sbin/uci
+
